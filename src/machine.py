@@ -238,7 +238,7 @@ class Machine:
                     time_waiting = (datetime.datetime.now() - self.last_token_time).total_seconds()
                     time.sleep(0.1)
                 if time_waiting >= self.TIMEOUT_VALUE:
-                    self.logger.debug('\n'+'-'*56+'\n'+f"| No token. Generating a new token. |"+'\n'+'-'*56+'\n')
+                    self.logger.debug('\n'+'-'*56+'\n'+f"No token found. Generating a new token."+'\n'+'-'*56+'\n')
                     self.generate_token()
                     self.send_packet(self.token)
                     self.token = None
@@ -247,7 +247,7 @@ class Machine:
                     time_waiting = 0
                     self.logger.debug("A new token has been added. Sending it forward.")
                 elif time_waiting < self.MINIMUM_TIME:
-                    self.logger.debug('\n'+'-'*60+'\n'+f"| Too fast. Removing the token. |"+'\n'+'-'*60+'\n')
+                    self.logger.debug('\n'+'-'*60+'\n'+f"Too fast. Removing the token."+'\n'+'-'*60+'\n')
                     self.has_token = False
                     self.token = None
                     self.logger.debug("The token has been removed.")
