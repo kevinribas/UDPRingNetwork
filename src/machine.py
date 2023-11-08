@@ -11,11 +11,9 @@ from .token_packet import TokenPacket
 from .file_handler import FlushingFileHandler
 
 class Machine:
-
     def __init__(self, ip: str, nickname: str, time_token: str, has_token: bool = False, 
                  error_probability: float = 0.2, TIMEOUT_VALUE: int = 100, MINIMUM_TIME: int = 2, 
                  local_ip: str = "127.0.0.1", local_port: int = 6000) -> None:
-        
         """
         Args:
             ip (str): "ip:porta" da próxima máquina da rede
@@ -28,7 +26,7 @@ class Machine:
             local_ip (str, optional): IP da máquina local. 
             local_port (int, optional): Porta da máquina local. Por padrão, 6000.
         """        
-        
+        # Initialize machine properties
         self.ip, self.port = self._extract_ip_and_port(ip)
         self.local_ip = local_ip
         self.local_port = local_port
@@ -75,24 +73,27 @@ class Machine:
 
     @staticmethod
     def _extract_ip_and_port(ip: str) -> tuple:    
+        # Separates IP address and port from an string
         ip_address, port = ip.split(":")
         return ip_address, int(port)
 
-    def generate_token(self):   
+    def generate_token(self):
+        # Generate a token
         self.token = TokenPacket()
         self.has_token = True
         self.last_token_time = datetime.datetime.now()
 
     def add_packet_to_queue(self, packet: Packet):   
+        # Add a packet to the message queue
         self.message_queue.append(packet)
 
     def send_packet(self, packet: Packet, add_error_chance: bool = False):
+        # Send a packet through the socket, with optional error introduction
         self.logger.debug('-'*50)
         if isinstance(packet, DataPacket):
             self.logger.debug("Sending data packet...")
         elif isinstance(packet, TokenPacket):
             self.logger.debug("Sending token...")
-            
         if isinstance(packet, DataPacket) and random.random() < self.error_probability:
             if add_error_chance == True:
                 bit_to_invert = random.randint(0, 31)
@@ -109,6 +110,7 @@ class Machine:
             self.logger.debug('-'*50+'\n\n')
         
     def receive_packet(self): 
+        # Receive and process a packet
         data, _ = self.socket.recvfrom(1024) # recebe o pacote
         packet_type = Packet.get_packet_type(data.decode()) # pega o tipo do pacote
         packet = TokenPacket() if packet_type == "1000" else DataPacket.create_header_from_string(data.decode()) # cria o pacote a partir do header recebido
@@ -119,6 +121,7 @@ class Machine:
         return self.process_packet(packet)
             
     @classmethod
+    # Create a machine instance from a configuration file
     def create_machine_from_file(cls, file_path: str, local_ip: str = "127.0.0.1", local_port: int = 6000,
                                  TIMEOUT_VALUE: int = 100, MINIMUM_TIME: int = 2, error_probability: float = 0.2): 
         with open(file_path, 'r') as file:
@@ -128,6 +131,7 @@ class Machine:
                    TIMEOUT_VALUE=TIMEOUT_VALUE, MINIMUM_TIME=MINIMUM_TIME, error_probability=error_probability)
     
     def close_socket(self):      
+        # Close the machine's socket
         self.socket.close()   
         
     def run(self):     
